@@ -1,3 +1,9 @@
+# encoding=utf8
+import sys
+
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 from bs4 import BeautifulSoup
 import requests
 
@@ -17,7 +23,9 @@ for alphabet in data:
 			print 'crashed at %s %d'%(alphabet, data)
 			output.close()
 
-		if response.status_code != 200:
+		print 'trying %s' %(link)
+
+		if response.url != link:
 			break
 
 		soup =  BeautifulSoup(response.text, 'html.parser')
@@ -32,10 +40,14 @@ for alphabet in data:
 				artist_soup = BeautifulSoup(str(tds[0]), 'html.parser')
 				genre_soup = BeautifulSoup(str(tds[1]), 'html.parser')
 
-				artist_name = ''.join(artist_soup.a.contents)
+				artist_name = ''.join(artist_soup.a.contents).replace(' Lyrics', '')
 				artist_link = artist_soup.a['href']
 				genre = ' '.join(genre_soup.td.contents)
+
+				if not genre:
+					genre= 'Not Available'
 				output.write('%s\t%s\t%s\n'%(artist_name,genre, artist_link))
+
 
 		count+=1
 

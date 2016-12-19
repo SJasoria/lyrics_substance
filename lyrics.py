@@ -1,6 +1,7 @@
 import os
 import requests
 from bs4 import BeautifulSoup
+from slugify import slugify
 
 UAH = {'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36'}
 
@@ -66,6 +67,8 @@ with open('artist.csv') as artists:
 
 					if not year:
 						year = 'Not Available'
+					elif not year.isdigit():
+						continue
 
 					try:
 						os.mkdir(year)
@@ -86,7 +89,7 @@ with open('artist.csv') as artists:
 						data = verse.text
 						song.append(data)
 
-					song_file = open(song_name, 'w')
+					song_file = open(slugify(song_name), 'w')
 					song_file.write('\n'.join(song))
 					song_file.close()
 					os.chdir(new_pwd)

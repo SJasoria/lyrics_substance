@@ -62,8 +62,6 @@ with open('artist.csv') as artists:
 
 					song_link = song_soup.a['href']
 
-					print 'fetching %s' %(song_link)
-
 					year = ''.join(year_soup.td.contents)
 
 					if not year:

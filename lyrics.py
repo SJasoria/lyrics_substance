@@ -2,6 +2,8 @@ import os
 import requests
 from bs4 import BeautifulSoup
 
+UAH = {'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36'}
+
 with open('artist.csv') as artists:
 	pwd = os.getcwd()
 	for line in artists:
@@ -35,10 +37,11 @@ with open('artist.csv') as artists:
 			link = pre_link + 'alpage-%d.html' %(count)
 
 			try:
-				response = requests.get(link)
+				response = requests.get(link, headers=UAH)
 			except:
 				print 'crashed at %s' %(link)
 				raw_input()
+
 
 			if response.url != link:
 				break
@@ -57,8 +60,10 @@ with open('artist.csv') as artists:
 
 					song_name = ''.join(song_soup.a.contents).replace(' Lyrics', '').strip()
 
-					print 'fetching song %s' %(song_name)
 					song_link = song_soup.a['href']
+
+					print 'fetching %s' %(song_link)
+
 					year = ''.join(year_soup.td.contents)
 
 					if not year:
@@ -72,7 +77,7 @@ with open('artist.csv') as artists:
 					os.chdir(year)
 
 					try:
-						response = requests.get(song_link)
+						response = requests.get(song_link, headers=UAH)
 					except:
 						print 'crashed at %s' %(song_link)
 						raw_input()
@@ -86,7 +91,6 @@ with open('artist.csv') as artists:
 					song_file = open(song_name, 'w')
 					song_file.write('\n'.join(song))
 					song_file.close()
-					raw_input()
 					os.chdir(new_pwd)
 
 

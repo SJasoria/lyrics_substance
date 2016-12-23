@@ -20,6 +20,11 @@ from os.path import join
 UAH = {'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36'}
 
 main_d = os.getcwd()
+try:
+	os.mkdir(join(main_d, 'results'))
+except OSError:
+	pass
+main_d = join(main_d, 'results')
 
 def extractLyrics():
 	print 'Using thread: ' + t.name

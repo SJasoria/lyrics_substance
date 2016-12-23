@@ -1,5 +1,10 @@
 # encoding=utf8
+import httplib
 import sys
+import threading
+
+from Queue import Queue
+from threading import Thread
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -12,25 +17,37 @@ from slugify import slugify
 
 UAH = {'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36'}
 
-with open('artist.csv') as artists:
-	pwd = os.getcwd()
-	for line in artists:
-		data = line.split('\t')
+def extractLyrics():
+	print 'Using thread: ' + t.name
+	print "Current working directory: " + os.getcwd()
 
+	while True:
+		i = q_of_artist.get()
+		extractLyricsforArtist(i)
+		q_of_artist.task_done()
+
+def extractLyricsforArtist(data):
 		artist = data[0]
 		genre = data[1]
 		link = data[2]
 
+		print 'Number of active threads' + str(threading.active_count())
 		print 'trying artist %s' %(artist)
+		print 'Using thread: ' + t.name
+		print "Current working directory: " + os.getcwd()
+		raw_input()
 
 		try:
 			os.mkdir(artist)
+			print "Made a directory called " + artist
 		except OSError:
 			pass
 
 		os.chdir(artist)
 
 		new_pwd=os.getcwd()
+		print "Current working directory: " + os.getcwd()
+		print  ''
 
 		genre_file = open("genre.txt", 'w')
 		genre_file.write(genre)
@@ -41,6 +58,8 @@ with open('artist.csv') as artists:
 		pre_link =	link.strip().replace('lyrics.html', '')
 		while True:
 
+			print 'Using thread: ' + t.name
+			print "Current working directory: " + os.getcwd()
 			print 'trying page %d' %(count)
 			link = pre_link + 'alpage-%d.html' %(count)
 
@@ -57,6 +76,10 @@ with open('artist.csv') as artists:
 			soup = BeautifulSoup(response.text, 'html.parser')
 
 			for tr in soup.find_all('tr'):
+
+				print 'Using thread: ' + t.name
+				print "Current working directory: " + os.getcwd()
+
 				new_soup = BeautifulSoup(str(tr), 'html.parser')
 				tds = new_soup.find_all('td')
 
@@ -100,8 +123,31 @@ with open('artist.csv') as artists:
 					song_file.write('\n'.join(song))
 					song_file.close()
 					os.chdir(new_pwd)
-
-
 			count+=1
-
+		print 'Outside while true of extractLyrics for an artist: ' +artist
 		os.chdir(pwd)
+
+
+q_of_artist = Queue()
+count_artists = 0
+try:
+	with open('artist.csv') as artists:
+		pwd = os.getcwd()
+		for line in artists:
+			data = line.split('\t')
+			artist = data[0]
+			genre = data[1]
+			link = data[2]
+			info = [artist, genre, link]
+			q_of_artist.put(info)
+			count_artists += 1
+
+except KeyboardInterrupt:
+	sys.exit(1)
+
+for i in range(count_artists):
+	t= Thread(target = extractLyrics)
+	t.daemon = True
+	t.start()
+
+q_of_artist.join()

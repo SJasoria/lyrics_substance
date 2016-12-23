@@ -27,8 +27,6 @@ except OSError:
 main_d = join(main_d, 'results')
 
 def extractLyrics():
-	print 'Using thread: ' + t.name
-
 	while True:
 		i = q_of_artist.get()
 		extractLyricsforArtist(i)
@@ -39,17 +37,12 @@ def extractLyricsforArtist(data):
 		genre = data[1]
 		link = data[2]
 
-		print 'Number of active threads' + str(threading.active_count())
-		print 'trying artist %s' %(artist)
-		print 'Using thread: ' + t.name
-
 		try:
-			os.mkdir(join(main_d, artist))
-			print "Made a directory called " + artist
+			os.mkdir(join(main_d, slugify(unicode(artist))))
 		except OSError:
 			pass
 
-		genre_file = open(join(main_d, artist, 'genre.txt'), 'w')
+		genre_file = open(join(main_d, slugify(unicode(artist)), 'genre.txt'), 'w')
 		genre_file.write(genre)
 		genre_file.close()
 
@@ -58,8 +51,6 @@ def extractLyricsforArtist(data):
 		pre_link =	link.strip().replace('lyrics.html', '')
 		while True:
 
-			print 'Using thread: ' + t.name
-			print 'trying page %d' %(count)
 			link = pre_link + 'alpage-%d.html' %(count)
 
 			try:
@@ -75,7 +66,6 @@ def extractLyricsforArtist(data):
 
 			for tr in soup.find_all('tr'):
 
-				print 'Using thread: ' + t.name
 
 				new_soup = BeautifulSoup(str(tr), 'html.parser')
 				tds = new_soup.find_all('td')
@@ -98,7 +88,7 @@ def extractLyricsforArtist(data):
 						continue
 
 					try:
-						os.mkdir(join(main_d, artist, year))
+						os.mkdir(join(main_d, slugify(unicode(artist)), year))
 					except OSError:
 						pass
 
@@ -113,11 +103,10 @@ def extractLyricsforArtist(data):
 						data = verse.text
 						song.append(data)
 
-					song_file = open(join(main_d, artist, year, slugify(song_name)), 'w')
+					song_file = open(join(main_d, slugify(unicode(artist)), year, slugify(song_name)), 'w')
 					song_file.write('\n'.join(song))
 					song_file.close()
 			count+=1
-		print 'Outside while true of extractLyrics for an artist: ' +artist
 
 
 q_of_artist = Queue()
@@ -137,7 +126,7 @@ try:
 except KeyboardInterrupt:
 	sys.exit(1)
 
-for i in range(count_artists):
+for i in range(100):
 	t= Thread(target = extractLyrics)
 	t.daemon = True
 	t.start()

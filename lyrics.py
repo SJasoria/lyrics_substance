@@ -15,11 +15,14 @@ import requests
 from bs4 import BeautifulSoup
 from slugify import slugify
 
+from os.path import join
+
 UAH = {'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36'}
+
+main_d = os.getcwd()
 
 def extractLyrics():
 	print 'Using thread: ' + t.name
-	print "Current working directory: " + os.getcwd()
 
 	while True:
 		i = q_of_artist.get()
@@ -34,22 +37,14 @@ def extractLyricsforArtist(data):
 		print 'Number of active threads' + str(threading.active_count())
 		print 'trying artist %s' %(artist)
 		print 'Using thread: ' + t.name
-		print "Current working directory: " + os.getcwd()
-		raw_input()
 
 		try:
-			os.mkdir(artist)
+			os.mkdir(join(main_d, artist))
 			print "Made a directory called " + artist
 		except OSError:
 			pass
 
-		os.chdir(artist)
-
-		new_pwd=os.getcwd()
-		print "Current working directory: " + os.getcwd()
-		print  ''
-
-		genre_file = open("genre.txt", 'w')
+		genre_file = open(join(main_d, artist, 'genre.txt'), 'w')
 		genre_file.write(genre)
 		genre_file.close()
 
@@ -59,7 +54,6 @@ def extractLyricsforArtist(data):
 		while True:
 
 			print 'Using thread: ' + t.name
-			print "Current working directory: " + os.getcwd()
 			print 'trying page %d' %(count)
 			link = pre_link + 'alpage-%d.html' %(count)
 
@@ -67,7 +61,6 @@ def extractLyricsforArtist(data):
 				response = requests.get(link, headers=UAH)
 			except:
 				print 'crashed at %s' %(link)
-				raw_input()
 
 
 			if response.url != link:
@@ -78,7 +71,6 @@ def extractLyricsforArtist(data):
 			for tr in soup.find_all('tr'):
 
 				print 'Using thread: ' + t.name
-				print "Current working directory: " + os.getcwd()
 
 				new_soup = BeautifulSoup(str(tr), 'html.parser')
 				tds = new_soup.find_all('td')
@@ -101,17 +93,14 @@ def extractLyricsforArtist(data):
 						continue
 
 					try:
-						os.mkdir(year)
+						os.mkdir(join(main_d, artist, year))
 					except OSError:
 						pass
-
-					os.chdir(year)
 
 					try:
 						response = requests.get(song_link, headers=UAH)
 					except:
 						print 'crashed at %s' %(song_link)
-						raw_input()
 
 					lyrics_soup = BeautifulSoup(response.text, 'html.parser')
 					song = []
@@ -119,20 +108,18 @@ def extractLyricsforArtist(data):
 						data = verse.text
 						song.append(data)
 
-					song_file = open(slugify(song_name), 'w')
+					song_file = open(join(main_d, artist, year, slugify(song_name)), 'w')
 					song_file.write('\n'.join(song))
 					song_file.close()
-					os.chdir(new_pwd)
 			count+=1
 		print 'Outside while true of extractLyrics for an artist: ' +artist
-		os.chdir(pwd)
 
 
 q_of_artist = Queue()
 count_artists = 0
 try:
 	with open('artist.csv') as artists:
-		pwd = os.getcwd()
+		pwd = main_d
 		for line in artists:
 			data = line.split('\t')
 			artist = data[0]
